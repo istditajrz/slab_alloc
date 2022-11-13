@@ -42,7 +42,7 @@ impl<'m, const N: usize> SlabAllocator<'m, N> {
         let mut buffer: [&'m [u8]; N] = [&[]; N];
         for (index, section) in blocks.iter().enumerate() {
             let size = match section.allocated {
-                Atomics::Bool(_) => 1 * section.size,
+                Atomics::Bool(_) => section.size,
                 Atomics::U8(_) => 8 * section.size,
                 Atomics::U16(_) => 16 * section.size,
                 Atomics::U32(_) => 32 * section.size,
@@ -69,10 +69,7 @@ impl<'m, const N: usize> SlabAllocator<'m, N> {
 }
 
 unsafe impl<'m, const N: usize> alloc::Allocator for SlabAllocator<'m, N> {
-    fn allocate(
-        &self,
-        layout: alloc::Layout,
-    ) -> Result<core::ptr::NonNull<[u8]>, alloc::AllocError> {
+    fn allocate(&self, layout: alloc::Layout) -> Result<ptr::NonNull<[u8]>, alloc::AllocError> {
         // Target size of block
         let size = layout.pad_to_align().size();
 
@@ -82,14 +79,14 @@ unsafe impl<'m, const N: usize> alloc::Allocator for SlabAllocator<'m, N> {
             .iter()
             .enumerate()
             .find(|(_, section)| section.size >= size && section.free_slots() > 0)
-            .ok_or_else(|| alloc::AllocError)?;
+            .ok_or(alloc::AllocError)?;
 
         // Calculate the offset within the section and mark it as allocated
         let offset = section.allocate()? as usize;
 
         Ok(self.buffer[index][offset..(offset + section.size)].into())
     }
-    unsafe fn deallocate(&self, ptr: core::ptr::NonNull<u8>, _layout: alloc::Layout) {
+    unsafe fn deallocate(&self, ptr: ptr::NonNull<u8>, _layout: alloc::Layout) {
         // Find section allocated in
         let (index, buffer) = self
             .buffer
@@ -100,6 +97,7 @@ unsafe impl<'m, const N: usize> alloc::Allocator for SlabAllocator<'m, N> {
 
         // Calculate byte offset in the section
         let offset = ptr.as_ptr().offset_from(buffer.as_ptr()) as u32;
+
         // Deallocate the block
         self.blocks[index]
             .deallocate(offset)

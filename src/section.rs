@@ -180,13 +180,7 @@ impl Section {
     /// The amount of slots unallocated
     pub fn free_slots(&self) -> u32 {
         match &self.allocated {
-            Atomics::Bool(u) => {
-                if !u.load(Ordering::Relaxed) {
-                    1
-                } else {
-                    0
-                }
-            }
+            Atomics::Bool(u) => u32::from(!u.load(Ordering::Relaxed)),
             Atomics::U8(u) => u.load(Ordering::Relaxed).count_zeros(),
             Atomics::U16(u) => u.load(Ordering::Relaxed).count_zeros(),
             Atomics::U32(u) => u.load(Ordering::Relaxed).count_zeros(),

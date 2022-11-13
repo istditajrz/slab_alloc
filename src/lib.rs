@@ -9,6 +9,7 @@
 /// Types to describe allocation states of slab sizes
 pub mod section;
 use core::alloc;
+use core::ptr;
 pub use section::{Atomics, Section};
 
 /// The main struct which encapsulates the allocator.

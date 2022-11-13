@@ -99,9 +99,7 @@ unsafe impl<'m, const N: usize> alloc::Allocator for SlabAllocator<'m, N> {
             .expect("Could not deallocate slab: could not find section ptr is allocated in");
 
         // Calculate byte offset in the section
-        let offset = ptr.as_ptr().offset_from(buffer.as_ptr()) as u32; // * self.blocks[index].size as u32;
-        extern crate std;
-        std::println!("Offset: {}\nSize: {}", offset, self.blocks[index].size);
+        let offset = ptr.as_ptr().offset_from(buffer.as_ptr()) as u32;
         // Deallocate the block
         self.blocks[index]
             .deallocate(offset)

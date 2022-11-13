@@ -223,11 +223,6 @@ mod test {
                     for _ in 0..<$num_type>::BITS {
                         assert!(section.allocate().is_ok());
                     }
-                    if let Atomics::U8(ref u) = section.allocated {
-                        extern crate std;
-                        use core::sync::atomic::Ordering;
-                        std::println!("{}", u.load(Ordering::SeqCst));
-                    }
                     assert!(section.allocate().is_err());
                     assert!(section.free_slots() == 0);
                 }
